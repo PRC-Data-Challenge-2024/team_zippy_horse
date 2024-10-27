@@ -241,690 +241,7 @@
       END IF
       END FUNCTION PICAOPA
        
-       subroutine pstest(IPS,mass,mach,FL,dhdt,dvdt,Temp)
-! note FL in hft
-     USE mo_directories,ONLY: NPS
-     use mo_cocip_parameters, only: R0,g,LCVCC,cp,GAMMA,cpkero,etacombustion,PI
-       implicit none
-        INTEGER,INTENT(IN):: IPS
-       real,INTENT(IN):: mass,mach,FL,dhdt,dvdt,Temp
-       INCLUDE "psbeta3.inc"
-       real massx
- 
-  
- 
-       real PICAOPA
- 
-       real amue
-       real Ca17,Cb17,Cc17,Cd17,Ce17,Cf17,Cg17,Ch17,Ci17,Cj17,Ck17,Cl17 & 
-      ,Cm17,Cn17,Co17,Cp17,Cq17,Cr17,Cs17,Ct17,Cu17,Cv17,Cw17,Cx17,Cy17 & 
-      ,Cz17
-      real Ba17,Bb17,Bc17,Bd17,Be17,Bf17,Bg17,Bh17,Bi17,Bj17,Bk17,Bl17 & 
-      ,Bm17,Bn17,Bo17,Bp17,Bq17,Br17,Bs17,Bt17,Bu17,Bv17,Bw17,Bx17,By17 & 
-      ,Bz17
-      real aa17,Ab17,Ac17,Ad17,Ae17,Af17,Ag17,Ah17,Ai17,Aj17,Ak17,Al17 & 
-      ,Am17,An17,Ao17,Ap17,Aq17,Ar17,As17,At17,Au17,Av17,Aw17,Ax17,Ay17 & 
-      ,Az17
-      real a17,b17,c17,d17,e17,f17,g17,h17,i17,j17,k17,l17,m17,n17 & 
-       ,o17,p17,q17,r17,s17,t17,u17,v17,w17,x17,y17,z17
-       real cpe_cp
-       real z, TISA
-       TISA(z)=max( 216.65,288.15-0.0065*z)
-       d17=dhdt
-       c17=FL ! in hft
-       print*,' mass,mach,FL,dhdt,dvdt,Temp',mass,mach,FL,dhdt,dvdt,Temp
-       A17=Mass
-       B17=mach
-       H17=FL*30.48 ! h_m
-       print*,'H17',H17
-       I17=PICAOPA(FL*30.48) ! p
-       print*,'I17',I17
-       J17=Temp-TISA(FL*30.48) ! dtisa
-       print*,'J17',J17
-        K17=TEMP
-         print*,'K17',K17
-       L17=sqrt(GAMMA*R0*Temp) ! a
-       print*,'L17',L17
-   
-       m17=0.000001458*(TEMP**1.5)/(110.4+TEMP) ! amue
-       print*,'m17',m17
-       Q17=mach*L17 ! TAS
-       print*,'q17',q17
-       R17=dvdt/g ! dvdt/g
-       print*,'r17',r17
-       S17=d17/q17 ! sin(theta)
-       print*,'s17',s17
-       T17= sqrt(1.-S17**2) ! cos(theta)
-       print*,'t17',t17
-       U17=S17/T17 !tan(theta)
-       print*,'u17',u17
-       V17=ASIN(S17)*180./PI ! theta
-       print*,'v17',v17
-!      sin(𝜃)	cos(𝜃)	tan(𝜃)	𝜃 (degs)
-   !  $P$5=PSwingarea(IPS)
 
-      Z17=(mass*g*T17)/(0.5*GAMMA*I17*B17*B17*PSwingarea(IPS)) ! CL
-      print*,'Z17',Z17
-      AA17= (sqrt(PSwingarea(IPS))*B17)*(I17/M17)*sqrt(GAMMA/(R0*K17)) ! R Reynoldszahl
-      print*,'AA17',AA17
-      AB17=0.0269/(AA17**0.14)! Cf
-      print*,'Ab17',Ab17
- ! $W$5 = PPSI0
-      AC17 =PPSI0(IPS)*AB17 ! Cd0
-      print*,'Ac17',Ac17
-  ! $T$5= Pcossweep(IPS)
-      AD17=0.8*(1.-0.53*Pcossweep(IPS))*AC17 ! = k1
-      print*,'Ad17',Ad17
- !    $S$5= Pdelta2(IPS)
- ! *$U$5=PAR(IPS)
- ! *$U$5 = winglets
-      if(Pwinglets(IPS).eq.0) then
-      AE17=(1./((1.+0.03+Pdelta2(IPS))+AD17*PI*PAR(IPS))) ! eLS
-      else
-      AE17=(1.075/((1.+0.03+Pdelta2(IPS))+AD17*PI*PAR(IPS)))  ! eLS
-      end if
-      print*,'AE17',AE17
-      AF17= 1./(PI*PAR(IPS)*AE17) ! K
-       print*,'AF17',AF17
-!      $Y$5 = Pwingconstant(IPS)
-      AG17 =Pwingconstant(IPS)-0.1*(Z17/Pcossweep(IPS)**2)! = Mcc
-       print*,'AG17',AG17
-      AH17=B17*Pcossweep(IPS)/AG17 ! = X
-      print*,'AH17',AH17
- ! $AA$5= PJ1(IPS)
- ! $Z$5 = PJ2(IPS)
- !=WENN(AH17.LT.$Z$5;0;WENN(AH17.LT.$X$5;($T$5**3)*$AA$5*((AH17-$Z$5)**2);($T$5**3)*$AA$5*((AH17-$Z$5)**2)+40*((AH17-$X$5)**4)))
- ! $X$5 = PXref(I)
-      if(AH17.LT.PJ2(IPS)) then
-       AI17=0. ! Cdw
-       else 
-       if(AH17.lt. PXref(IPS)) then
-      AI17=(Pcossweep(IPS)**3)*PJ1(IPS)*((AH17-PJ2(IPS))**2) ! Cdw
-      else
-      AI17= (Pcossweep(IPS)**3)*PJ1(IPs)*((AH17-PJ2(IPs))**2) & 
-       +40.*((AH17-PXref(IPS))**4) ! cdw
-       end if
-      end if
-      print*,'AI17',AI17
-      AK17=AC17+AF17*Z17*Z17+AI17 ! Cd, total drag
-       print*,'AK17',AK17
-      AL17 = Z17/AK17 ! = L/D
-       print*,'AL17',AL17
-      
-      AN17 =(T17/AL17)+S17+R17 != Fn/mg
-       print*,'AN17',AN17
-      AO17=AN17*(A17*g)/(0.5*GAMMA*I17*B17*B17*PSwingarea(IPS))
-       print*,'AO17',AO17
-!       $AK$5    = PMdes(IPS) Mach design??
-       AP17=B17/PMdes(IPS)  
-       print*,'AP17',AP17
-       if(B17.LT.0.4) then
-       AQ17=1.3*(0.4-B17) ! SIGMA
-       else
-       AQ17=0 ! SIGMA
-       end if
-       print*,'AQ17',AQ17
-       AR17=AQ17-0.43! SIGMA-THETA
-        print*,'AR17',AR17
-       AS17= AQ17*0.43! SIGMA*THETA
-         print*,'AS17',AS17
-       ! $AN$5= Peta2(IpS)
-       AT17=AP17**Peta2(IPS)! h1
-       print*,'AT17',AT17
- ! $AM$5 = Peta1(IPS)
-       AU17=AT17*Peta1(IPS)*PMdes(IPS)** Peta2(IpS)  ! $AN$5 eta_OB
-        print*,'AU17',AU17
-  ! $AK$5=  PMdes(IPS
-       AV17=((1.+0.55*B17)/(1.+0.55* PMdes(IPS))/(AP17**2))! h2
-        print*,'AV17',AV17
- !    $AL$5 = PCT(IPS)  
-       AW17=AV17* PCT(IPS)  ! (CT)𝜂B
-        print*,'AW17',AW17
-       AX17 =AO17/AW17!= CT/(CT)𝜂B
-        print*,'AX17',AX17
-!       AY17 ! =WENN(AX17.LT.0.3
-! ;10*(1.+0.8*AR17-0.6027*AS17)*AX17+33.3333*(-1.-0.97*AR17+0.8281*AS17)*(AX17**2)+37.037*(1.+AR17-0.9163*AS17)*(AX17**3)
-! ;(1.+AR17-AS17)+(-2*AR17+4*AS17)*AX17+(AR17-6*AS17)*(AX17**2)+4*AS17*(AX17**3)-AS17*(AX17**4))
- ! =WENN(AX17.LT.0.3
- !;10*(1+0.8*AR17-0.6027*AS17)*AX17+33.3333*(-1-0.97*AR17+0.8281*AS17)*(AX17^2)+37.037*(1+AR17-0.9163*AS17)*(AX17^3)
- !;(1+AR17-AS17)+(-2*AR17+4*AS17)*AX17+(AR17-6*AS17)*(AX17^2)+4*AS17*(AX17^3)-AS17*(AX17^4))
-      if(AX17.LT.0.3) then
-  ! AY17 = 𝜂o/(𝜂o)𝜂B
-       AY17=10.*(1.+0.8*AR17-0.6027*AS17)*AX17+33.3333 & 
-       *(-1.-0.97*AR17+0.8281*AS17)*(AX17**2)+37.037 & 
-       *(1.+AR17-0.9163*AS17)*(AX17**3)
-       else
-        AY17=(1.+AR17-AS17)+(-2.*AR17+4.*AS17)*AX17+(AR17-6.*AS17) & 
-       *(AX17**2)+4.*AS17*(AX17**3)-AS17*(AX17**4)
-       end if
-        print*,'AY17',AY17
-  ! AZ17
-       if(AX17.LT.0.3) THEN
-       AZ17=6.56*(1.+0.8244*AQ17)*AX17-19.43*(1.+1.053*AQ17)*(AX17**2)+21.11*(1.+1.063*AQ17)*(AX17**3)
-       else
-       AZ17= (1.-0.43*((AX17-1)**2))*((1.+AQ17*((AX17-1)**2)))
-      end if
-       print*,'AZ17',AZ17
-      BA17=AY17*AU17 ! eta_o
-         print*,'BA17 eta_o =0.305, with AY',BA17
-      ! $bb$14 =0.975
-      BB17=0.975*BA17! in service corrected 𝜂o
-       print*,'BB17',BB17
-      BD17=BB17*AL17! (𝜂oL/D)
-        print*,'BD17, (𝜂oL/D)',BD17
- ! $AJ$5=PFFIdle(IPS) !nominal((mf)FI)SLS (kg/s) =0.22
-!      BE17=WENN(0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC).LT.$AJ$5*(1.-0.178*(C17/100)+0.0085*((C17/100)**2));$AJ$5*(1.-0.178*(C17/100)+0.0085*((C17/100)**2));0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC)) ! mf/((kg/s)
-      if(0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC).LT. & 
-       PFFIdle(IPS)*(1.-0.178*(C17*0.01) & 
-       +0.0085*((C17*0.01)**2)))THEN
-      BE17=PFFIdle(IPS)*(1.-0.178*(C17*0.01) & 
-       +0.0085*((C17*0.01)**2))
-      else
-      BE17=0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC)
-      end if
-        print*,'BE17,  mf (kg/s)=0.608 kg/s?',BE17
-      BF17=BE17/Q17! mf in kg per m
-        print*,'BF17',BF17
-      
- ! engine state
-      
-      BH17= 0.6*(1.+(2./3.)*AX17) ! TR
-        print*,'BH17',BH17
- ! $AP$5= TEC(IPS)
- ! $AO$5= MEC(IPS)
- !  $AF$5*=PBPR(IPS)
- ! $PAR$5
- !$PAR$5= TETmaxt_o(IPS) =((TET)maxt/o)/(Tsl)isa
-
-      BI17 = 0.6*TEC(IPS)*(1.-0.53*((B17-MEC(IPS))**2)) & 
-         *(1.+((2./3.)*AX17))!      (T0)4/(T0)2
-        print*,'BI17',BI17
-      BK17=  PBPR(IPS)*(TETmaxt_o(IPS)**1.13)/(BI17**1.13) !   PBPR
-        print*,'BK17',BK17
-      
-  ! $AE$5= nominla POPR = POPR(IPS)
-  ! =$AG$5 =nominal FPR  = FPR(IPS)
-
-      BL17= (POPR(IPS)/(TETmaxt_o(IPS)**2.5))*(BI17**2.5)
-        print*,'BL17',BL17
-      BM17=(FPR(IPS)/TETmaxt_o(IPS))*BI17
-        print*,'BM17',BM17
- !     $AS$5= (𝜂)PC = etaPC(IPS)
-
-      BN17=BL17**(0.4/(GAMMA*etaPC(IPS)))
-        print*,'BN17',BN17
-      
-      
-      BO17=BM17**(0.4/(GAMMA*etaPC(IPS))) ! (T0)13/(T0)2
-        print*,'BO17',BO17
-      
-      BP17 =BI17-(cp/1244.)*(BK17*(BO17-1.)+(BN17-1.)) ! (T0)5/(T0)2
-        print*,'BP17',BP17
-
-      BQ17 =(1.+0.2*B17*B17)*K17! (T0)2 (K)
-        print*,'BQ17',BQ17
-      
-      BR17 = BN17*BQ17
-        print*,'BR17',BR17
-      
-      BS17=BI17*BQ17 ! T0 4
-        print*,'BS17',BS17
-      
-      BT17=BP17*BQ17 ! T05
-        print*,'BT17',BT17
-      
-      BV17 =((1.+0.2*B17*B17)**3.5)*I17 ! (p0)2 (Pa)
-        print*,'BV17',BV17
-      
-     
-      BW17 = BL17*BV17 ! 751231 = (p0)3 (Pa)
-        print*,'BW17',BW17
-      
-      ! $BY$10 = cpe/cp = 1.2378
-      ! LCVCC= LCVCC
-      ! $BY$9 = cp
-      ! $BY$10=cpe/cp
-      ! $BY$12=cpkero/cp
-      ! $BY$14= etacombustion=0.99
-       cpe_cp=1.2378
-      
-      BY17 =((cpe_cp*(BI17-(298./BQ17))-(BN17-(298./BQ17)))/((LCVCC/ & 
-       (cp*BQ17))-cpe_cp*(BI17-(298./BQ17))+cpkero/cp & 
-       *(1.-(298./BQ17)))) & 
-       /etacombustion ! = FTAR =0.0203
-     
-        print*,'BY17',BY17
-     
-      ! = TRmax= (CT)max/(CT)𝜂B
-      ! $CC$12=1.2
-      
-      
- !     CA17=WENN(AO17.gt.(Z17*((1./AL17)+(1.524/Q17)));AO17;(Z17*((1./AL17)+(1.524/Q17))))
-       if(AO17.gt.(Z17*((1./AL17)+(1.524/Q17)))) then
-       CA17=AO17
-       else
-       CA17=Z17*((1./AL17)+(1.524/Q17))
-       end if
-       Print*,' CA17',  CA17 
-      
- !     $AQ$5= TET max climb = 1529 = TETmaxclimb(IPS)
-      
-      CC17 =1.2*( TETmaxclimb(IPS)/K17)/(TEC(IPS)* & 
-       (1.-0.53*((B17-MEC(IPS))**2))*(1.+0.2*B17*B17)) ! = 1.337
-
-       Print*,' CC17',  CC17 
-      
-! CD17 = (CT)max/(CT)𝜂B
-      CD17= 1.+2.5*(CC17-1.)  ! = 1.844
-        Print*,' CD17',  CD17 
-      
-       CE17 = CD17*AW17 ! (CT)avail = 0.0639
-        Print*,' CE17',  CE17 
-      
-      !CF17 = (CT)avail/(CT)req
-      CF17=CE17/CA17
-       Print*,' CF17',  CF17 
-      
-      
-  !    clmax= (Z17*((1./AL17)+(1.524/Q17))
-  
- !      CI17=(Z17*((1./AL17)+(1.524/Q17))   ! 1.024
-       
-       CI17 =sqrt(((CE17-AC17-AI17)/AF17)+(((S17+R17)/(2*AF17))**2)) & 
-       -((S17+R17)/(2*AF17))
-      Print*,' CI17',  CI17 
-     
-      CJ17=CI17*(0.5*GAMMA*I17*B17*B17)*PSwingarea(IPS)/g
-        Print*,' CJ17',  CJ17 
-       
-       
-       CL17=B17/PMdes(IPS) ! = 1 = Mach/PMdes(IPS)
-        Print*,' CL17',  CL17 
-       
-       ! $AB$5   = (CL)do = $AB$5  =clo(IPS)  ?? 
-       
-       
- !      cm17= =WENN(CL17.LT.0.5*GAMMA;1.8+0.16*CL17-1.085*(CL17**2);13.272-42.262*CL17+49.883*(CL17**2)-19.683*(CL17**3))
-       if(CL17.LT.0.5*GAMMA) then
-       cm17=1.8+0.16*CL17-1.085*(CL17**2)
-       else
-       cm17=13.272-42.262*CL17+49.883*(CL17**2)-19.683*(CL17**3)
-       end if
-        Print*,' cm17',  cm17 
-
-       cn17=CM17*clo(IPS)
-        Print*,' cn17',  cn17 
-       co17=Z17/CN17
-        Print*,' co17', co17
-        if(CO17.gt.1.) print*,' CL not achievable'
-       cr17=CN17*(0.5*GAMMA*I17*B17*B17)*PSwingarea(IPS)/g
-        Print*,' cr17',  cr17 
-        massx=CR17
-        
- ! $AV$5 = PMalthft(IPS)
-! $AY$5 = pinfcoPa(IPS)
-! $AX$5=  pimaxPa(IPS)
-        ct17=C17/PMalthft(IPS)
-        if(ct17.gt.1.)    print*,' FL not achievable'
-        
-!        CW17=WENN(C17.LT.100;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*(10510/I17))-1);WENN(I17.GT.$AY$5;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*($AX$5/I17))-1);$AV$5))
-      if(C17.LT.100.) THEN
-      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(10510./I17))-1.)
-      else
-      if(I17.GT.pinfcoPa(IPS)) then
-      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(pimaxPa(IPS)/I17))-1.)
-      else
-      CW17= PMalthft(IPS)
-      end if
-      end if 
-      if(cw17.lt.1.)    print*,' Mach not achievable'
-      print*,' end of PS'
-       end subroutine PStest
-       
-       
-       
-      subroutine ps(IPS,mass,mach,FL,dhdt,dvdt,Temp)
-! note FL in hft
-      USE mo_directories,ONLY: NPS
-     use mo_cocip_parameters, only: R0,g,LCVCC,cp,GAMMA,cpkero,etacombustion,&
-     PI,cpe_cp
-       implicit none
-        INTEGER,INTENT(IN):: IPS
-       real,INTENT(IN):: mass,mach,FL,dhdt,dvdt,Temp
-       INCLUDE "psbeta3.inc"
- 
-       real massx
- 
-       real PICAOPA
- 
-       real amue
-       real Ca17,Cb17,Cc17,Cd17,Ce17,Cf17,Cg17,Ch17,Ci17,Cj17,Ck17,Cl17 & 
-      ,Cm17,Cn17,Co17,Cp17,Cq17,Cr17,Cs17,Ct17,Cu17,Cv17,Cw17,Cx17,Cy17 & 
-      ,Cz17
-      real Ba17,Bb17,Bc17,Bd17,Be17,Bf17,Bg17,Bh17,Bi17,Bj17,Bk17,Bl17 & 
-      ,Bm17,Bn17,Bo17,Bp17,Bq17,Br17,Bs17,Bt17,Bu17,Bv17,Bw17,Bx17,By17 & 
-      ,Bz17
-      real aa17,Ab17,Ac17,Ad17,Ae17,Af17,Ag17,Ah17,Ai17,Aj17,Ak17,Al17 & 
-      ,Am17,An17,Ao17,Ap17,Aq17,Ar17,As17,At17,Au17,Av17,Aw17,Ax17,Ay17 & 
-      ,Az17
-      real a17,b17,c17,d17,e17,f17,g17,h17,i17,j17,k17,l17,m17,n17 & 
-       ,o17,p17,q17,r17,s17,t17,u17,v17,w17,x17,y17,z17
-       real z, TISA
-       TISA(z)=max( 216.65,288.15-0.0065*z)
-       d17=dhdt
-       c17=FL ! in hft
-       print*,' mass,mach,FL,dhdt,dvdt,Temp',mass,mach,FL,dhdt,dvdt,Temp
-       A17=Mass
-       B17=mach
-       H17=FL*30.48 ! h_m
-       print*,'H17',H17
-       I17=PICAOPA(FL*30.48) ! p
-       print*,'I17',I17
-       J17=Temp-TISA(FL*30.48) ! dtisa
-       print*,'J17',J17
-        K17=TEMP
-         print*,'K17',K17
-       L17=sqrt(GAMMA*R0*Temp) ! a
-       print*,'L17',L17
-   
-       m17=0.000001458*(TEMP**1.5)/(110.4+TEMP) ! amue
-       print*,'m17',m17
-       Q17=mach*L17 ! TAS
-       print*,'q17',q17
-       R17=dvdt/g ! dvdt/g
-       print*,'r17',r17
-       S17=d17/q17 ! sin(theta)
-       print*,'s17',s17
-       T17= 1.-S17**2 ! cos(theta)
-       print*,'t17',t17
-       U17=S17/T17 !tan(theta)
-       print*,'u17',u17
-       V17=ASIN(S17)*180./PI ! theta
-       print*,'v17',v17
-!      sin(𝜃)	cos(𝜃)	tan(𝜃)	𝜃 (degs)
-   !  $P$5=PSwingarea(IPS)
-
-      Z17=(mass*g*T17)/(0.5*GAMMA*I17*B17*B17*PSwingarea(IPS)) ! CL
-      print*,'Z17',Z17
-      AA17= (sqrt(PSwingarea(IPS))*B17)*(I17/M17)*sqrt(GAMMA/(R0*K17)) ! R Reynoldszahl
-      print*,'AA17',AA17
-      AB17=0.0269/(AA17**0.14)! Cf
-      print*,'Ab17',Ab17
- ! $W$5 = PPSI0
-      AC17 =PPSI0(IPS)*AB17 ! Cd0
-      print*,'Ac17',Ac17
-  ! $T$5= Pcossweep(IPS)
-      AD17=0.8*(1.-0.53*Pcossweep(IPS))*AC17 ! = k1
-      print*,'Ad17',Ad17
- !    $S$5= Pdelta2(IPS)
- ! *$U$5=PAR(IPS)
- ! *$U$5 = winglets
-      if(Pwinglets(IPS).eq.0) then
-      AE17=(1./((1.+0.03+Pdelta2(IPS))+AD17*PI*PAR(IPS))) ! eLS
-      else
-      AE17=(1.075/((1.+0.03+Pdelta2(IPS))+AD17*PI*PAR(IPS)))  ! eLS
-      end if
-      print*,'AE17',AE17
-      AF17= 1./(PI*PAR(IPS)*AE17) ! K
-       print*,'AF17',AF17
-!      $Y$5 = Pwingconstant(IPS)
-      AG17 =Pwingconstant(IPS)-0.1*(Z17/Pcossweep(IPS)**2)! = Mcc
-       print*,'AG17',AG17
-      AH17=B17*Pcossweep(IPS)/AG17 ! = X
-      print*,'AH17',AH17
- ! $AA$5= PJ1(IPS)
- ! $Z$5 = PJ2(IPS)
- !=WENN(AH17.LT.$Z$5;0;WENN(AH17.LT.$X$5;($T$5**3)*$AA$5*((AH17-$Z$5)**2);($T$5**3)*$AA$5*((AH17-$Z$5)**2)+40*((AH17-$X$5)**4)))
- ! $X$5 = PXref(I)
-      if(AH17.LT.PJ2(IPS)) then
-       AI17=0. ! Cdw
-       else 
-       if(AH17.lt. PXref(IPS)) then
-      AI17=(Pcossweep(IPS)**3)*PJ1(IPS)*((AH17-PJ2(IPS))**2) ! Cdw
-      else
-      AI17= (Pcossweep(IPS)**3)*PJ1(IPs)*((AH17-PJ2(IPs))**2) & 
-       +40.*((AH17-PXref(IPS))**4) ! cdw
-       end if
-      end if
-      print*,'AI17',AI17
-      AK17=AC17+AF17*Z17*Z17+AI17 ! Cd, total drag
-       print*,'AK17',AK17
-      AL17 = Z17/AK17 ! = L/D
-       print*,'AL17',AL17
-      
-      AN17 =(T17/AL17)+S17+R17 != Fn/mg
-       print*,'AN17',AN17
-      AO17=AN17*(A17*g)/(0.5*GAMMA*I17*B17*B17*PSwingarea(IPS))
-       print*,'AO17',AO17
-!       $AK$5    = PMdes(IPS) Mach design??
-       AP17=B17/PMdes(IPS)  
-       print*,'AP17',AP17
-       if(B17.LT.0.4) then
-       AQ17=1.3*(0.4-B17) ! SIGMA
-       else
-       AQ17=0 ! SIGMA
-       end if
-       print*,'AQ17',AQ17
-       AR17=AQ17-0.43! SIGMA-THETA
-        print*,'AR17',AR17
-       AS17= AQ17*0.43! SIGMA*THETA
-         print*,'AS17',AS17
-       ! $AN$5= Peta2(IpS)
-       AT17=AP17**Peta2(IPS)! h1
-       print*,'AT17',AT17
- ! $AM$5 = Peta1(IPS)
-       AU17=AT17*Peta1(IPS)*PMdes(IPS)** Peta2(IpS)  ! $AN$5 eta_OB
-        print*,'AU17',AU17
-  ! $AK$5=  PMdes(IPS
-       AV17=((1.+0.55*B17)/(1.+0.55* PMdes(IPS))/(AP17**2))! h2
-        print*,'AV17',AV17
- !    $AL$5 = PCT(IPS)  
-       AW17=AV17* PCT(IPS)  ! (CT)𝜂B
-        print*,'AW17',AW17
-       AX17 =AO17/AW17!= CT/(CT)𝜂B
-        print*,'AX17',AX17
-!       AY17 ! =WENN(AX17.LT.0.3
-! ;10*(1.+0.8*AR17-0.6027*AS17)*AX17+33.3333*(-1.-0.97*AR17+0.8281*AS17)*(AX17**2)+37.037*(1.+AR17-0.9163*AS17)*(AX17**3)
-! ;(1.+AR17-AS17)+(-2*AR17+4*AS17)*AX17+(AR17-6*AS17)*(AX17**2)+4*AS17*(AX17**3)-AS17*(AX17**4))
- ! =WENN(AX17.LT.0.3
- !;10*(1+0.8*AR17-0.6027*AS17)*AX17+33.3333*(-1-0.97*AR17+0.8281*AS17)*(AX17^2)+37.037*(1+AR17-0.9163*AS17)*(AX17^3)
- !;(1+AR17-AS17)+(-2*AR17+4*AS17)*AX17+(AR17-6*AS17)*(AX17^2)+4*AS17*(AX17^3)-AS17*(AX17^4))
-      if(AX17.LT.0.3) then
-  ! AY17 = 𝜂o/(𝜂o)𝜂B
-       AY17=10.*(1.+0.8*AR17-0.6027*AS17)*AX17+33.3333 & 
-       *(-1.-0.97*AR17+0.8281*AS17)*(AX17**2)+37.037 & 
-       *(1.+AR17-0.9163*AS17)*(AX17**3)
-       else
-        AY17=(1.+AR17-AS17)+(-2.*AR17+4.*AS17)*AX17+(AR17-6.*AS17) & 
-       *(AX17**2)+4.*AS17*(AX17**3)-AS17*(AX17**4)
-       end if
-        print*,'AY17',AY17
-  ! AZ17
-       if(AX17.LT.0.3) THEN
-       AZ17=6.56*(1.+0.8244*AQ17)*AX17-19.43*(1.+1.053*AQ17)*(AX17**2)+21.11*(1.+1.063*AQ17)*(AX17**3)
-       else
-       AZ17= (1.-0.43*((AX17-1)**2))*((1.+AQ17*((AX17-1)**2)))
-      end if
-       print*,'AZ17',AZ17
-      BA17=AY17*AU17 ! eta_o
-         print*,'BA17 eta_o =0.305, with AY',BA17
-      BA17=AY17*AU17 ! eta_o
-       print*,'BA17;  eta_o =0.305, with AZ',BA17
-      ! $bb$14 =0.975
-      BB17=0.975*BA17! in service corrected 𝜂o
-       print*,'BB17',BB17
-      BD17=BB17*AL17! (𝜂oL/D)
-        print*,'BD17, (𝜂oL/D)',BD17
- ! $AJ$5=PFFIdle(IPS) !nominal((mf)FI)SLS (kg/s) =0.22
-!      BE17=WENN(0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC).LT.$AJ$5*(1.-0.178*(C17/100)+0.0085*((C17/100)**2));$AJ$5*(1.-0.178*(C17/100)+0.0085*((C17/100)**2));0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC)) ! mf/((kg/s)
-      if(0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC).LT. & 
-       PFFIdle(IPS)*(1.-0.178*(C17*0.01) & 
-       +0.0085*((C17*0.01)**2)))THEN
-      BE17=PFFIdle(IPS)*(1.-0.178*(C17*0.01) & 
-       +0.0085*((C17*0.01)**2))
-      else
-      BE17=0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC)
-      end if
-        print*,'BE17,  mf (kg/s)=0.608 kg/s?',BE17
-      BF17=BE17/Q17! mf in kg per m
-        print*,'BF17',BF17
-      
- ! engine state
-      
-      BH17= 0.6*(1.+(2./3.)*AX17) ! TR
-        print*,'BH17',BH17
- ! $AP$5= TEC(IPS)
- ! $AO$5= MEC(IPS)
- !  $AF$5*=PBPR(IPS)
- ! $PAR$5
- !$PAR$5= TETmaxt_o(IPS) =((TET)maxt/o)/(Tsl)isa
-
-      BI17 = 0.6*TEC(IPS)*(1.-0.53*((B17-MEC(IPS))**2)) & 
-         *(1.+((2./3.)*AX17))!      (T0)4/(T0)2
-        print*,'BI17',BI17
-      BK17=  PBPR(IPS)*(TETmaxt_o(IPS)**1.13)/(BI17**1.13) !   PBPR
-        print*,'BK17',BK17
-      
-  ! $AE$5= nominla POPR = POPR(IPS)
-  ! =$AG$5 =nominal FPR  = FPR(IPS)
-
-      BL17= (POPR(IPS)/(TETmaxt_o(IPS)**2.5))*(BI17**2.5)
-        print*,'BL17',BL17
-      BM17=(FPR(IPS)/TETmaxt_o(IPS))*BI17
-        print*,'BM17',BM17
- !     $AS$5= (𝜂)PC = etaPC(IPS)
-
-      BN17=BL17**(0.4/(GAMMA*etaPC(IPS)))
-        print*,'BN17',BN17
-      
-      
-      BO17=BM17**(0.4/(GAMMA*etaPC(IPS))) ! (T0)13/(T0)2
-        print*,'BO17',BO17
-      
-      BP17 =BI17-(cp/1244.)*(BK17*(BO17-1.)+(BN17-1.)) ! (T0)5/(T0)2
-        print*,'BP17',BP17
-
-      BQ17 =(1.+0.2*B17*B17)*K17! (T0)2 (K)
-        print*,'BQ17',BQ17
-      
-      BR17 = BN17*BQ17
-        print*,'BR17',BR17
-      
-      BS17=BI17*BQ17 ! T0 4
-        print*,'BS17',BS17
-      
-      BT17=BP17*BQ17 ! T05
-        print*,'BT17',BT17
-      
-      BV17 =((1.+0.2*B17*B17)**3.5)*I17 ! (p0)2 (Pa)
-        print*,'BV17',BV17
-      
-     
-      BW17 = BL17*BV17 ! 751231 = (p0)3 (Pa)
-        print*,'BW17',BW17
-      
-      ! $BY$10 = cpe/cp = 1.2378
-      ! LCVCC= LCVCC
-      ! $BY$9 = cp
-      ! $BY$10=cpe/cp
-      ! $BY$12=cpkero/cp
-      ! $BY$14= etacombustion=0.99
-
-      
-      BY17 =((cpe_cp*(BI17-(298./BQ17))-(BN17-(298./BQ17)))/((LCVCC/ & 
-       (cp*BQ17))-cpe_cp*(BI17-(298./BQ17))+cpkero/cp & 
-       *(1.-(298./BQ17)))) & 
-       /etacombustion ! = FTAR =0.0203
-     
-        print*,'BY17',BY17
-     
-      ! = TRmax= (CT)max/(CT)𝜂B
-      ! $CC$12=1.2
-      
-      
- !     CA17=WENN(AO17.gt.(Z17*((1./AL17)+(1.524/Q17)));AO17;(Z17*((1./AL17)+(1.524/Q17))))
-       if(AO17.gt.(Z17*((1./AL17)+(1.524/Q17)))) then
-       CA17=AO17
-       else
-       CA17=Z17*((1./AL17)+(1.524/Q17))
-       end if
-       Print*,' CA17',  CA17 
-      
- !     $AQ$5= TET max climb = 1529 = TETmaxclimb(IPS)
-      
-      CC17 =1.2*( TETmaxclimb(IPS)/K17)/(TEC(IPS)* & 
-       (1.-0.53*((B17-MEC(IPS))**2))*(1.+0.2*B17*B17)) ! = 1.337
-
-       Print*,' CC17',  CC17 
-      
-! CD17 = (CT)max/(CT)𝜂B
-      CD17= 1.+2.5*(CC17-1.)  ! = 1.844
-        Print*,' CD17',  CD17 
-      
-       CE17 = CD17*AW17 ! (CT)avail = 0.0639
-        Print*,' CE17',  CE17 
-      
-      !CF17 = (CT)avail/(CT)req
-      CF17=CE17/CA17
-       Print*,' CF17',  CF17 
-      
-      
-  !    clmax= (Z17*((1./AL17)+(1.524/Q17))
-  
- !      CI17=(Z17*((1./AL17)+(1.524/Q17))   ! 1.024
-       
-       CI17 =sqrt(((CE17-AC17-AI17)/AF17)+(((S17+R17)/(2*AF17))**2)) & 
-       -((S17+R17)/(2*AF17))
-      Print*,' CI17',  CI17 
-     
-      CJ17=CI17*(0.5*GAMMA*I17*B17*B17)*PSwingarea(IPS)/g
-        Print*,' CJ17',  CJ17 
-       
-       
-       CL17=B17/PMdes(IPS) ! = 1 = Mach/PMdes(IPS)
-        Print*,' CL17',  CL17 
-       
-       ! $AB$5   = (CL)do = $AB$5  =clo(IPS)  ?? 
-       
-       
- !      cm17= =WENN(CL17.LT.0.5*GAMMA;1.8+0.16*CL17-1.085*(CL17**2);13.272-42.262*CL17+49.883*(CL17**2)-19.683*(CL17**3))
-       if(CL17.LT.0.5*GAMMA) then
-       cm17=1.8+0.16*CL17-1.085*(CL17**2)
-       else
-       cm17=13.272-42.262*CL17+49.883*(CL17**2)-19.683*(CL17**3)
-       end if
-        Print*,' cm17',  cm17 
-
-       cn17=CM17*clo(IPS)
-        Print*,' cn17',  cn17 
-       co17=Z17/CN17
-        Print*,' co17', co17
-        if(CO17.gt.1.) print*,' CL not achievable'
-       cr17=CN17*(0.5*GAMMA*I17*B17*B17)*PSwingarea(IPS)/g
-        Print*,' cr17',  cr17 
-        massx=CR17
-        
- ! $AV$5 = PMalthft(IPS)
-! $AY$5 = pinfcoPa(IPS)
-! $AX$5=  pimaxPa(IPS)
-        ct17=C17/PMalthft(IPS)
-        if(ct17.gt.1.)    print*,' FL not achievable'
-        
-!        CW17=WENN(C17.LT.100;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*(10510/I17))-1);WENN(I17.GT.$AY$5;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*($AX$5/I17))-1);$AV$5))
-      if(C17.LT.100.) THEN
-      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(10510./I17))-1.)
-      else
-      if(I17.GT.pinfcoPa(IPS)) then
-      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(pimaxPa(IPS)/I17))-1.)
-      else
-      CW17= PMalthft(IPS)
-      end if
-      end if 
-      if(cw17.lt.1.)    print*,' Mach not achievable'
-      print*,' end of PS'
-       end subroutine PS
-       
-       
        
       subroutine psbeta3(IPS,mass, mach,FL, dhdt,dvdt,DTISA,ff,eta & 
        ,etaLD,CL,CD,massxCL,massxCT)
@@ -949,6 +266,7 @@
 ! etaLD = eta *  L/D
 ! CL= lift coefficient
 ! CD = drag coefficient
+! massxCL ,massxCT = masses from CL or CT
      USE mo_directories,ONLY: NPS
      use mo_cocip_parameters, only: R0,g,LCVCC,cpkero,etacombustion &
      ,PI,GAMMA,cp,cpe_cp
@@ -959,7 +277,7 @@
         INTEGER,INTENT(IN):: IPS
        real,INTENT(IN):: mass,mach,FL,dhdt,dvdt,DTISA
        real,INTENT(out):: ff,eta,etaLD,CL,CD,massxCL,massxCT
-       real temp
+       real temp,h
         real PICAOPA
  
        real amue,tmg,TAS
@@ -972,8 +290,8 @@
       real aa17,Ab17,Ac17,Ad17,Ae17,Af17,Ag17,Ah17,Ai17,Aj17,Ak17,Al17 & 
       ,Am17,An17,Ao17,Ap17,Aq17,Ar17,As17,At17,Au17,Av17,Aw17,Ax17,Ay17 & 
       ,Az17
-      real a17,b17,c17,d17,e17,f17,g17,h17,i17,j17,k17,l17,m17,n17 & 
-       ,o17,p17,q17,r17,s17,t17,u17,v17,w17,x17,y17,z17
+      real e17,f17,g17,p,asound,amue,n17 & 
+       ,o17,p17,r17,s17,t17,u17,v17,w17,x17,y17,z17
        real z, TISA
        INTEGER ibe171
          TISA(z)=max( 216.65,288.15-0.0065*z)
@@ -981,33 +299,28 @@
       print*,'psbeta3: ips.eq.0, IPS,NPS', IPS,NPS
       stop
       end if
-       d17=dhdt
-       c17=FL
-       temp=TISA(FL*30.48)+dtisa
+      h=FL*30.48
+  
+       temp=TISA(h)+dtisa
  !      Print*,' mass,mach,FL,dhdt,dvdt,dtisa' & 
  !     ,mass,mach,FL,dhdt,dvdt,dtisa
-       A17=Mass
-       B17=mach
-       H17=FL*30.48 ! h_m
-!       print*,'H17',H17
-       I17=PICAOPA(FL*30.48) ! p
- !      Print*,'I17',I17
+    
+
  
-       J17=Temp-TISA(FL*30.48) ! dtisa
- !      Print*,'J17',J17
-        K17=TEMP
-   !      Print*,'K17',K17
-       L17=sqrt(GAMMA*R0*Temp) ! a
- !      Print*,'L17',L17
+       p=PICAOPA(h) ! p
+ !      Print*,'p',p
+ 
+       asound=sqrt(GAMMA*R0*Temp) ! a
+ !      Print*,'asound',asound
    
-       m17=0.000001458*(TEMP**1.5)/(110.4+TEMP) ! amue
- !      Print*,'m17',m17
-       Q17=mach*L17 ! TAS
-       TAS=Q17
- !      Print*,'q17',q17
+       amue=0.000001458*(TEMP**1.5)/(110.4+TEMP) ! amue
+ !      Print*,'amue',amue
+       TAS=mach*asound ! TAS
+    
+ !      Print*,'TAS',TAS
        R17=dvdt/g ! dvdt/g
  !      Print*,'r17',r17
-       S17=d17/q17 ! sin(theta)
+       S17=dhdt/TAS ! sin(theta)
  !      Print*,'s17',s17
        T17= 1.-S17**2 ! cos(theta)
  !      Print*,'t17',t17
@@ -1018,9 +331,9 @@
 !      sin(𝜃)	cos(𝜃)	tan(𝜃)	𝜃 (degs)
    !  $P$5=PSwingarea(IPS)
 
-      Z17=(mass*g*T17)/(0.5*GAMMA*I17*B17*B17*PSwingarea(IPS)) ! CL
+      Z17=(mass*g*T17)/(0.5*GAMMA*p*mach*mach*PSwingarea(IPS)) ! CL
 !      Print*,'Z17',Z17
-      AA17= (sqrt(PSwingarea(IPS))*B17)*(I17/M17)*sqrt(GAMMA/(R0*K17)) ! R Reynoldszahl
+      AA17= (sqrt(PSwingarea(IPS))*mach)*(p/amue)*sqrt(GAMMA/(R0*Temp)) ! R Reynoldszahl
 !      Print*,'AA17',AA17
       AB17=0.0269/(AA17**0.14)! Cf
 !      Print*,'Ab17',Ab17
@@ -1044,7 +357,7 @@
 !      $Y$5 = Pwingconstant(IPS)
       AG17 =Pwingconstant(IPS)-0.1*(Z17/Pcossweep(IPS)**2)! = Mcc
  !      Print*,'AG17',AG17
-      AH17=B17*Pcossweep(IPS)/AG17 ! = X
+      AH17=mach*Pcossweep(IPS)/AG17 ! = X
 !      Print*,'AH17',AH17
  ! $AA$5= PJ1(IPS)
  ! $Z$5 = PJ2(IPS)
@@ -1068,13 +381,13 @@
       
       AN17 =(T17/AL17)+S17+R17 != Fn/mg
  !      Print*,'AN17',AN17
-      AO17=AN17*(A17*g)/(0.5*GAMMA*I17*B17*B17*PSwingarea(IPS))
+      AO17=AN17*(Mass*g)/(0.5*GAMMA*p*mach*mach*PSwingarea(IPS))
  !      Print*,'AO17',AO17
 !       $AK$5    = PMdes(IPS) Mach design??
-       AP17=B17/PMdes(IPS)  
+       AP17=mach/PMdes(IPS)  
  !      Print*,'AP17',AP17
-       if(B17.LT.0.4) then
-       AQ17=1.3*(0.4-B17) ! SIGMA
+       if(mach.LT.0.4) then
+       AQ17=1.3*(0.4-mach) ! SIGMA
        else
        AQ17=0 ! SIGMA
        end if
@@ -1090,7 +403,7 @@
        AU17=AT17*Peta1(IPS)*PMdes(IPS)** Peta2(IpS)  ! $AN$5 eta_OB
   !      Print*,'AU17',AU17
   ! $AK$5=  PMdes(IPS
-       AV17=((1.+0.55*B17)/(1.+0.55* PMdes(IPS))/(AP17**2))! h2
+       AV17=((1.+0.55*mach)/(1.+0.55* PMdes(IPS))/(AP17**2))! h2
   !      Print*,'AV17',AV17
  !    $AL$5 = PCT(IPS)  
        AW17=AV17* PCT(IPS)  ! (CT)𝜂B
@@ -1117,7 +430,7 @@
        if(AX17.LT.0.3) THEN
        AZ17=6.56*(1.+0.8244*AQ17)*AX17-19.43*(1.+1.053*AQ17)*(AX17**2)+21.11*(1.+1.063*AQ17)*(AX17**3)
        else
-       AZ17= (1.-0.43*((AX17-1)**2))*((1.+AQ17*((AX17-1)**2)))
+       AZ17= (1.-0.43*((AX17-1.)**2))*((1.+AQ17*((AX17-1.)**2)))
       end if
  !      Print*,'AZ17',AZ17
       BA17=AY17*AU17 ! eta_o
@@ -1130,20 +443,20 @@
       BD17=BB17*AL17! (𝜂oL/D)
       !      Print*,'BD17, (𝜂oL/D)',BD17
  ! $AJ$5=PFFIdle(IPS) !nominal((mf)FI)SLS (kg/s) =0.22
-!      BE17=WENN(0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC).LT.$AJ$5*(1.-0.178*(C17/100)+0.0085*((C17/100)**2));$AJ$5*(1.-0.178*(C17/100)+0.0085*((C17/100)**2));0.7*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC)) ! mf/((kg/s)
+!      BE17=WENN(0.5*GAMMA*(AO17*(mach**3)/BB17)*(p*asound*PSwingarea(IPS)/LCVCC).LT.$AJ$5*(1.-0.178*(FL/100)+0.0085*((FL/100)**2));$AJ$5*(1.-0.178*(FL/100)+0.0085*((FL/100)**2));0.7*(AO17*(mach**3)/BB17)*(p*asound*PSwingarea(IPS)/LCVCC)) ! mf/((kg/s)
       ibe171=0
-      if(0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC).LT. & 
-       PFFIdle(IPS)*(1.-0.178*(C17*0.01) & 
-       +0.0085*((C17*0.01)**2)))THEN
-      BE17=PFFIdle(IPS)*(1.-0.178*(C17*0.01) & 
-       +0.0085*((C17*0.01)**2))
-        ibe171=2 ! idle
+      if(0.5*GAMMA*(AO17*(mach**3)/BB17)*(p*asound*PSwingarea(IPS)/LCVCC).LT. & 
+       PFFIdle(IPS)*(1.-0.178*(FL*0.01) & 
+       +0.0085*((FL*0.01)**2)))THEN
+      BE17=PFFIdle(IPS)*(1.-0.178*(FL*0.01) & 
+       +0.0085*((FL*0.01)**2))
+        ibe171=2. ! idle
       else
-      BE17=0.5*GAMMA*(AO17*(B17**3)/BB17)*(I17*L17*PSwingarea(IPS)/LCVCC)
+      BE17=0.5*GAMMA*(AO17*(mach**3)/BB17)*(p*asound*PSwingarea(IPS)/LCVCC)
       ibe171=1
       end if
       !      Print*,'BE17,  mf (kg/s)=0.608 kg/s?',BE17
-      BF17=BE17/Q17! mf in kg per m
+      BF17=BE17/TAS! mf in kg per m
       !      Print*,'BF17',BF17
       
  ! engine state
@@ -1156,7 +469,7 @@
  ! $PAR$5
  !$PAR$5= TETmaxt_o(IPS) =((TET)maxt/o)/(Tsl)isa
 
-      BI17 = 0.6*TEC(IPS)*(1.-0.53*((B17-MEC(IPS))**2)) & 
+      BI17 = 0.6*TEC(IPS)*(1.-0.53*((mach-MEC(IPS))**2)) & 
          *(1.+((2./3.)*AX17))!      (T0)4/(T0)2
       !      Print*,'BI17',BI17
       BK17=  PBPR(IPS)*(TETmaxt_o(IPS)**1.13)/(BI17**1.13) !   PBPR
@@ -1181,7 +494,7 @@
       BP17 =BI17-(cp/1244.)*(BK17*(BO17-1.)+(BN17-1.)) ! (T0)5/(T0)2
       !      Print*,'BP17',BP17
 
-      BQ17 =(1.+0.2*B17*B17)*K17! (T0)2 (K)
+      BQ17 =(1.+0.2*mach*mach)*Temp! (T0)2 (K)
       !      Print*,'BQ17',BQ17
       
       BR17 = BN17*BQ17
@@ -1193,7 +506,7 @@
       BT17=BP17*BQ17 ! T05
       !      Print*,'BT17',BT17
       
-      BV17 =((1.+0.2*B17*B17)**3.5)*I17 ! (p0)2 (Pa)
+      BV17 =((1.+0.2*mach*mach)**3.5)*p ! (p0)2 (Pa)
       !      Print*,'BV17',BV17
       
      
@@ -1219,18 +532,18 @@
       ! $CC$12=1.2
       
       
- !     CA17=WENN(AO17.gt.(Z17*((1./AL17)+(1.524/Q17)));AO17;(Z17*((1./AL17)+(1.524/Q17))))
-       if(AO17.gt.(Z17*((1./AL17)+(1.524/Q17)))) then
+ !     CA17=WENN(AO17.gt.(Z17*((1./AL17)+(1.524/TAS)));AO17;(Z17*((1./AL17)+(1.524/TAS))))
+       if(AO17.gt.(Z17*((1./AL17)+(1.524/TAS)))) then
        CA17=AO17
        else
-       CA17=Z17*((1./AL17)+(1.524/Q17))
+       CA17=Z17*((1./AL17)+(1.524/TAS))
        end if
  !      Print*,' CA17',  CA17 
       
  !     $AQ$5= TET max climb = 1529 = TETmaxclimb(IPS)
       
-      CC17 =1.2*( TETmaxclimb(IPS)/K17)/(TEC(IPS)* & 
-       (1.-0.53*((B17-MEC(IPS))**2))*(1.+0.2*B17*B17)) ! = 1.337
+      CC17 =1.2*( TETmaxclimb(IPS)/Temp)/(TEC(IPS)* & 
+       (1.-0.53*((mach-MEC(IPS))**2))*(1.+0.2*mach*mach)) ! = 1.337
 
  !      Print*,' CC17',  CC17 
       
@@ -1246,20 +559,20 @@
  !      Print*,' CF17',  CF17 
       
       
-  !    clmax= (Z17*((1./AL17)+(1.524/Q17))
+  !    clmax= (Z17*((1./AL17)+(1.524/TAS))
   
- !      CI17=(Z17*((1./AL17)+(1.524/Q17))   ! 1.024
+ !      CI17=(Z17*((1./AL17)+(1.524/TAS))   ! 1.024
        
-       CI17 =sqrt(((CE17-AC17-AI17)/AF17)+(((S17+R17)/(2*AF17))**2)) & 
-       -((S17+R17)/(2*AF17))
+       CI17 =sqrt(((CE17-AC17-AI17)/AF17)+(((S17+R17)/(2.*AF17))**2)) & 
+       -((S17+R17)/(2.*AF17))
 !      Print*,' CI17',  CI17 
      
-      CJ17=CI17*(0.5*GAMMA*I17*B17*B17)*PSwingarea(IPS)/g
+      CJ17=CI17*(0.5*GAMMA*p*mach*mach)*PSwingarea(IPS)/g
   !      Print*,' CJ17',  CJ17 
       massxCT=CJ17
        
        
-       CL17=B17/PMdes(IPS) ! = 1 = Mach/PMdes(IPS)
+       CL17=mach/PMdes(IPS) ! = 1 = Mach/PMdes(IPS)
   !      Print*,' CL17',  CL17 
        
        ! $AB$5   = (CL)do = $AB$5  =clo(IPS)  ?? 
@@ -1278,22 +591,22 @@
        co17=Z17/CN17
   !      Print*,' co17', co17
 !        if(CO17.gt.1.) print*,' CL not achievable'
-       cr17=CN17*(0.5*GAMMA*I17*B17*B17)*PSwingarea(IPS)/g
+       cr17=CN17*(0.5*GAMMA*p*mach*mach)*PSwingarea(IPS)/g
        massxcl=CR17
   !      Print*,' cr17',  cr17 
         
  ! $AV$5 = PMalthft(IPS)
 ! $AY$5 = pinfcoPa(IPS)
 ! $AX$5=  pimaxPa(IPS)
-        ct17=C17/PMalthft(IPS)
+        ct17=FL/PMalthft(IPS)
         if(ct17.gt.1.)    print*,' FL not achievable'
         
-!        CW17=WENN(C17.LT.100;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*(10510/I17))-1);WENN(I17.GT.$AY$5;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*($AX$5/I17))-1);$AV$5))
-      if(C17.LT.100.) THEN
-      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(10510./I17))-1.)
+!        CW17=WENN(FL.LT.100;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*(10510/p))-1);WENN(p.GT.$AY$5;sqrt(2)*sqrt(sqrt(1+(2/GAMMA)*($AX$5/p))-1);$AV$5))
+      if(FL.LT.100.) THEN
+      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(10510./p))-1.)
       else
-      if(I17.GT.pinfcoPa(IPS)) then
-      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(pimaxPa(IPS)/I17))-1.)
+      if(p.GT.pinfcoPa(IPS)) then
+      CW17=sqrt(2.*sqrt(1.+(2./GAMMA)*(pimaxPa(IPS)/p))-1.)
       else
       CW17= PMalthft(IPS)
       end if
@@ -1317,11 +630,11 @@
       
       
       
- !     Cy17=B17/$AK$5
+ !     Cy17=mach/$AK$5
  !    CY17=mach/PMdes(IPS)
  !     Cz17==1-43.363*((CY17-1)^3)-4.9728*((CY17-1)^2)-1.2027*(CY17-1)
  !     DA17=CZ17*CLo(IPS)
- !     DC17=DA17*0.5*gamma*PICAOPA(FL*30.48) *mach**2*PSwingarea(IPS)/g
+ !     DC17=DA17*0.5*gamma*PICAOPA(h) *mach**2*PSwingarea(IPS)/g
       
       
  !      print*,' end of psbeta3, eta,etald,ff,cl,cd,eta*cl/cd' & 
